@@ -1,0 +1,10 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "democonn",
+      "database": "${workspaceFolder:admin_demo}/demo_backend/demo.db"
+    }
+  ]
+}
