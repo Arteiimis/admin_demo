@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import crud
@@ -9,6 +10,20 @@ from database import SessionLocal, engine
 app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
+
+# 配置CORS中间件
+origins = [
+    "http://localhost:5173",  # 允许的前端URL
+    # 你可以在这里添加更多的允许的源
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def get_db():
