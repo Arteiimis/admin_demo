@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
-import models
-import database
-import schemas
+
+from .models import student_model
+from .schemas import student_schema
 
 
-def create_student(db: Session, student: schemas.StudentCreate):
-    db_student = models.Student(name=student.name, major=student.major, status=student.status)
+def create_student(db: Session, student: student_schema.StudentCreate):
+    db_student = student_model.Student(
+        name=student.name, major=student.major, status=student.status)
     db.add(db_student)
     db.commit()
     db.refresh(db_student)
@@ -13,11 +14,11 @@ def create_student(db: Session, student: schemas.StudentCreate):
 
 
 def delete_student(db: Session, student_id: int):
-    db.query(models.Student).filter(models.Student.student_id == student_id).delete()
+    db.query(student_model.Student).filter(student_model.Student.student_id == student_id).delete()
     db.commit()
 
 
-def update_student(db: Session, student_id: int, student: schemas.StudentUpdate):
+def update_student(db: Session, student_id: int, student: student_schema.StudentUpdate):
     db_student = get_student(db, student_id)
     if db_student is None:
         return None
@@ -33,12 +34,12 @@ def update_student(db: Session, student_id: int, student: schemas.StudentUpdate)
 
 
 def get_students(db: Session):
-    return db.query(models.Student).all()
+    return db.query(student_model.Student).all()
 
 
 def get_student(db: Session, student_id: int):
-    return db.query(models.Student).filter(models.Student.student_id == student_id).first()
+    return db.query(student_model.Student).filter(student_model.Student.student_id == student_id).first()
 
 
 def get_student_byname(db: Session, name: str):
-    return db.query(models.Student).filter(models.Student.name == name).first()
+    return db.query(student_model.Student).filter(student_model.Student.name == name).first()
