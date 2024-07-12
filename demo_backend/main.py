@@ -1,15 +1,19 @@
-from fastapi import Depends, FastAPI, HTTPException
+from datetime import timedelta
+from typing import Annotated
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-import crud
-import models
-import schemas
-from database import SessionLocal, engine
+from .schemas import student_schema, user_schema
+from .models import student_model
+from .auth import authop
+from . import crud
+from .db.database import SessionLocal, engine
 
 app = FastAPI()
 
-models.Base.metadata.create_all(bind=engine)
+student_model.Base.metadata.create_all(bind=engine)
 
 # 配置CORS中间件
 origins = [
@@ -34,8 +38,8 @@ def get_db():
         db.close()
 
 
-@app.post("/students/", response_model=schemas.Student)
-def create_student(student: schemas.StudentCreate, db: Session = Depends(get_db)):
+@app.post("/students/", response_model=student_schema.Student)
+def create_student(student: student_schema.StudentCreate, db: Session = Depends(get_db)):
     """
     Create a new student in the database.
 
@@ -79,8 +83,8 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     return {"message": "Student deleted"}
 
 
-@app.put("/students/{student_id}", response_model=schemas.Student)
-def update_student(student_id: int, student: schemas.StudentUpdate, db: Session = Depends(get_db)):
+@app.put("/students/{student_id}", response_model=student_schema.Student)
+def update_student(student_id: int, student: student_schema.StudentUpdate, db: Session = Depends(get_db)):
     """
     Update a student in the database.
 
@@ -102,7 +106,7 @@ def update_student(student_id: int, student: schemas.StudentUpdate, db: Session 
     return db_student
 
 
-@app.get("/students/", response_model=list[schemas.Student])
+@app.get("/students/", response_model=list[student_schema.Student])
 def read_students(db: Session = Depends(get_db)):
     """
     Retrieve all students from the database.
@@ -117,7 +121,7 @@ def read_students(db: Session = Depends(get_db)):
     return students
 
 
-@app.get("/students/{student_id}", response_model=schemas.Student)
+@app.get("/students/{student_id}", response_model=student_schema.Student)
 def read_student(student_id: int, db: Session = Depends(get_db)):
     """
     Retrieve a student from the database by their ID.
@@ -139,7 +143,7 @@ def read_student(student_id: int, db: Session = Depends(get_db)):
     return db_student
 
 
-@app.get("/students/byname/{name}", response_model=schemas.Student)
+@app.get("/students/byname/{name}", response_model=student_schema.Student)
 def read_student_byname(name: str, db: Session = Depends(get_db)):
     """
     Retrieve a student from the database by their name.
@@ -159,6 +163,62 @@ def read_student_byname(name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Student not found")
 
     return db_student
+
+
+@app.post("/token")
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> user_schema.Token:
+    """
+    Authenticates the user and generates an access token.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): The form data containing the username and password.
+
+    Returns:
+        Token: The access token and its type.
+    """
+    user = authop.authenticate_user(authop.fake_user_db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token_expires = timedelta(minutes=authop.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = authop.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+
+    return user_schema.Token(access_token=access_token, token_type="bearer")
+
+
+@app.get("/users/me", response_model=user_schema.User)
+async def read_users_me(current_user: Annotated[user_schema.User, Depends(authop.get_current_user)]):
+    """
+    Retrieve the currently authenticated user.
+
+    Parameters:
+    - current_user: The currently authenticated user.
+
+    Returns:
+    - The currently authenticated user.
+    """
+    return current_user
+
+
+@app.get("/user/me/items/")
+async def read_own_items(current_user: Annotated[user_schema.User, Depends(authop.get_current_user)]):
+    """
+    Retrieve the items owned by the current user.
+
+    Parameters:
+    - current_user: The authenticated user.
+
+    Returns:
+    - A list of dictionaries representing the items owned by the current user.
+        Each dictionary contains the item_id and owner information.
+    """
+    return [{"item_id": "Foo", "owner": current_user.username}]
 
 
 @app.get("/")
