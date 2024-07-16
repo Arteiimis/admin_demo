@@ -70,6 +70,10 @@ async function handleDeleate(id: number) {
     console.error(error);
   }
 }
+
+function handleUpdate(id: number) {
+  // TODO: update student
+}
 </script>
 
 <template>
