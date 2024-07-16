@@ -36,6 +36,17 @@ def get_password_hash(password):
 
 
 def get_user(db, username: str | None = None):
+    """
+    Retrieve a user from the database based on the given username.
+
+    Args:
+        db (dict): The database containing user information.
+        username (str, optional): The username of the user to retrieve. Defaults to None.
+
+    Returns:
+        UserInDB: An instance of the UserInDB class representing the retrieved user.
+
+    """
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)

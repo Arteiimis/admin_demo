@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "demo-backend"
+version = "0.1.0"
+description = ""
+authors = ["artemiss <lionelym0987@gmail.com>"]
+readme = "README.md"
+package-mode = false
+packages = [{ include = "main.py" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+uvicorn = "^0.30.1"
+sqlalchemy = "^2.0.31"
+pyjwt = "^2.8.0"
+passlib = "^1.7.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

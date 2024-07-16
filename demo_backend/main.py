@@ -17,8 +17,8 @@ student_model.Base.metadata.create_all(bind=engine)
 
 # 配置CORS中间件
 origins = [
-    "http://localhost:5173",  # 允许的前端URL
-    # 你可以在这里添加更多的允许的源
+    # 允许的前端URL
+    "http://localhost:5173",
 ]
 
 app.add_middleware(
@@ -38,7 +38,7 @@ def get_db():
         db.close()
 
 
-@app.post("/students/", response_model=student_schema.Student)
+@app.post("/students/", response_model=student_schema.Student, tags=['students'])
 def create_student(student: student_schema.StudentCreate, db: Session = Depends(get_db)):
     """
     Create a new student in the database.
@@ -60,7 +60,7 @@ def create_student(student: student_schema.StudentCreate, db: Session = Depends(
     return crud.create_student(db=db, student=student)
 
 
-@app.delete("/students/{student_id}")
+@app.delete("/students/{student_id}", tags=['students'])
 def delete_student(student_id: int, db: Session = Depends(get_db)):
     """
     Delete a student from the database.
@@ -83,7 +83,7 @@ def delete_student(student_id: int, db: Session = Depends(get_db)):
     return {"message": "Student deleted"}
 
 
-@app.put("/students/{student_id}", response_model=student_schema.Student)
+@app.put("/students/{student_id}", response_model=student_schema.Student, tags=['students'])
 def update_student(student_id: int, student: student_schema.StudentUpdate, db: Session = Depends(get_db)):
     """
     Update a student in the database.
@@ -106,7 +106,7 @@ def update_student(student_id: int, student: student_schema.StudentUpdate, db: S
     return db_student
 
 
-@app.get("/students/", response_model=list[student_schema.Student])
+@app.get("/students/", response_model=list[student_schema.Student], tags=['students'])
 def read_students(db: Session = Depends(get_db)):
     """
     Retrieve all students from the database.
@@ -121,7 +121,7 @@ def read_students(db: Session = Depends(get_db)):
     return students
 
 
-@app.get("/students/{student_id}", response_model=student_schema.Student)
+@app.get("/students/{student_id}", response_model=student_schema.Student, tags=['students'])
 def read_student(student_id: int, db: Session = Depends(get_db)):
     """
     Retrieve a student from the database by their ID.
@@ -143,7 +143,7 @@ def read_student(student_id: int, db: Session = Depends(get_db)):
     return db_student
 
 
-@app.get("/students/byname/{name}", response_model=student_schema.Student)
+@app.get("/students/byname/{name}", response_model=student_schema.Student, tags=['students'])
 def read_student_byname(name: str, db: Session = Depends(get_db)):
     """
     Retrieve a student from the database by their name.
@@ -165,7 +165,7 @@ def read_student_byname(name: str, db: Session = Depends(get_db)):
     return db_student
 
 
-@app.post("/token")
+@app.post("/token", tags=['users'])
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> user_schema.Token:
     """
     Authenticates the user and generates an access token.
@@ -192,7 +192,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     return user_schema.Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me", response_model=user_schema.User)
+@app.get("/users/me", response_model=user_schema.User, tags=['users'])
 async def read_users_me(current_user: Annotated[user_schema.User, Depends(authop.get_current_user)]):
     """
     Retrieve the currently authenticated user.
@@ -206,7 +206,7 @@ async def read_users_me(current_user: Annotated[user_schema.User, Depends(authop
     return current_user
 
 
-@app.get("/user/me/items/")
+@app.get("/user/me/items/", tags=['users'])
 async def read_own_items(current_user: Annotated[user_schema.User, Depends(authop.get_current_user)]):
     """
     Retrieve the items owned by the current user.
